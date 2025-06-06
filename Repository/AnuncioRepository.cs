@@ -60,13 +60,13 @@ public class AnuncioRepository : IAnuncioRepository
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task PublicarEnFanpageAsync(string mensaje, string link = null, string photoId = null)
+    public async Task<string> PublicarEnFanpageAsync(string mensaje, string link = null, string photoId = null)
     {
         var url = $"https://graph.facebook.com/v23.0/{_pageId}/feed?access_token={_accessTokenPage}";
         var body = new Dictionary<string, object>
-    {
-        { "message", mensaje }
-    };
+        {
+            { "message", mensaje }
+        };
 
         if (!string.IsNullOrEmpty(link))
             body.Add("link", link);
@@ -81,6 +81,11 @@ public class AnuncioRepository : IAnuncioRepository
             throw new Exception($"Error Facebook API: {response.StatusCode} - {errorContent}");
         }
         response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var fullId = json.GetProperty("id").GetString(); // "PAGEID_POSTID"
+        //var postId = fullId.Split('_').Last(); // Solo el POSTID
+        return fullId; // postId;
     }
 
     public async Task<string> SubirImagenAFanpageAsync(string accessTokenPage,string imageUrl,  string mensaje = null)
@@ -108,4 +113,19 @@ public class AnuncioRepository : IAnuncioRepository
         // El ID de la foto subida está en el campo "id"
         return json.GetProperty("id").GetString();
     }
+
+    public async Task<string> ObtenerUrlImagenAsync(string photoId, string pageAccessToken)
+    {
+        var url = $"https://graph.facebook.com/v23.0/{photoId}?fields=images,link&access_token={pageAccessToken}";
+        using var httpClient = new HttpClient();
+        var response = await httpClient.GetAsync(url);
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        var images = doc.RootElement.GetProperty("images").EnumerateArray();
+        var firstImage = images.First();
+        return firstImage.GetProperty("source").GetString();
+    }
+
 }

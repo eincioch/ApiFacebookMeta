@@ -9,8 +9,10 @@ namespace ApiFacebook.Dominio.Contracts
 
         Task PublicarEnFanpageAsync(string mensaje);
 
-        Task PublicarEnFanpageAsync(string mensaje, string link = null, string photoId = null);
+        Task<string> PublicarEnFanpageAsync(string mensaje, string link = null, string photoId = null);
 
         Task<string> SubirImagenAFanpageAsync(string accessTokenPage, string imageUrl, string mensaje = null);
+
+        Task<string> ObtenerUrlImagenAsync(string photoId, string pageAccessToken);
     }
 }
