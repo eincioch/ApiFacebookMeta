@@ -11,6 +11,6 @@ namespace ApiFacebook.Dominio.Contracts
 
         Task PublicarEnFanpageAsync(string mensaje, string link = null, string photoId = null);
 
-        Task<string> SubirImagenAFanpageAsync(string imageUrl, string mensaje = null);
+        Task<string> SubirImagenAFanpageAsync(string accessTokenPage, string imageUrl, string mensaje = null);
     }
 }

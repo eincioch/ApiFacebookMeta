@@ -26,8 +26,8 @@ public class AnuncioService
         await _anuncioRepository.PublicarEnFanpageAsync(mensaje, link, photoId);
     }
 
-    public async Task<string> SubirImagenAFanpageAsync(string imageUrl, string mensaje = null)
+    public async Task<string> SubirImagenAFanpageAsync(string accessTokenPage, string imageUrl, string mensaje = null)
     {
-        return await _anuncioRepository.SubirImagenAFanpageAsync(imageUrl, mensaje);
+        return await _anuncioRepository.SubirImagenAFanpageAsync(accessTokenPage, imageUrl, mensaje);
     }
 }

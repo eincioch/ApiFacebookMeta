@@ -11,6 +11,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aplicacion", "Aplicacion\Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repository", "Repository\Repository.csproj", "{9AB60C71-D893-4448-B5B3-656A985985FA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend Meta", "Backend Meta", "{8B434946-9123-D1D1-0A83-D4002B6E79C5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FrontEnd Meta Out2", "FrontEnd Meta Out2", "{F042BCC3-00C5-946F-AB8A-D54081C67B25}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebFacebookAuth", "WebFacebookAuth\WebFacebookAuth.csproj", "{4042B575-88AC-4B17-AD2B-4E545A28A26C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,8 +75,30 @@ Global
 		{9AB60C71-D893-4448-B5B3-656A985985FA}.Release|x64.Build.0 = Release|Any CPU
 		{9AB60C71-D893-4448-B5B3-656A985985FA}.Release|x86.ActiveCfg = Release|Any CPU
 		{9AB60C71-D893-4448-B5B3-656A985985FA}.Release|x86.Build.0 = Release|Any CPU
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C}.Debug|x64.Build.0 = Debug|Any CPU
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C}.Debug|x86.Build.0 = Debug|Any CPU
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C}.Release|x64.ActiveCfg = Release|Any CPU
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C}.Release|x64.Build.0 = Release|Any CPU
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C}.Release|x86.ActiveCfg = Release|Any CPU
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D36BE38D-5735-4205-9F6A-ADDC987A117C} = {8B434946-9123-D1D1-0A83-D4002B6E79C5}
+		{7C85FA8A-FCA4-4213-9387-8193F89F503B} = {8B434946-9123-D1D1-0A83-D4002B6E79C5}
+		{C2DAF75C-F51B-469A-B63B-90642C40A613} = {8B434946-9123-D1D1-0A83-D4002B6E79C5}
+		{9AB60C71-D893-4448-B5B3-656A985985FA} = {8B434946-9123-D1D1-0A83-D4002B6E79C5}
+		{4042B575-88AC-4B17-AD2B-4E545A28A26C} = {F042BCC3-00C5-946F-AB8A-D54081C67B25}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F51FE05C-A2CB-4B90-B3B4-4D41D8FD3626}
 	EndGlobalSection
 EndGlobal

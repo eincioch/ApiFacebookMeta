@@ -1,5 +1,5 @@
 using ApiFacebook.Dominio.Entities;
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -37,7 +37,7 @@ public class AnunciosController : ControllerBase
     [HttpPost("fanpage/upload-image")]
     public async Task<IActionResult> SubirImagenAFanpage([FromBody] SubirImagenDto dto)
     {
-        var photoId = await _anuncioService.SubirImagenAFanpageAsync(dto.ImageUrl, dto.Mensaje);
+        var photoId = await _anuncioService.SubirImagenAFanpageAsync(dto.AccessTokenPage, dto.ImageUrl, dto.Mensaje);
         return Ok(new { photoId });
     }
 
@@ -52,6 +52,7 @@ public class PublicarFanpageDto
 
 public class SubirImagenDto
 {
+    public string AccessTokenPage { get; set; }
     public string ImageUrl { get; set; }
     public string Mensaje { get; set; }
 }

@@ -83,9 +83,9 @@ public class AnuncioRepository : IAnuncioRepository
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<string> SubirImagenAFanpageAsync(string imageUrl, string mensaje = null)
+    public async Task<string> SubirImagenAFanpageAsync(string accessTokenPage,string imageUrl,  string mensaje = null)
     {
-        var url = $"https://graph.facebook.com/v23.0/{_pageId}/photos?access_token={_accessToken}";
+        var url = $"https://graph.facebook.com/v23.0/{_pageId}/photos?access_token={accessTokenPage}";
 
         var parametros = new Dictionary<string, string>
         {
