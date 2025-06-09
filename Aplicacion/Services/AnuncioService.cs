@@ -16,18 +16,23 @@ public class AnuncioService
         await _anuncioRepository.CrearAnuncioFacebookAsync(anuncio);
     }
 
-    public async Task PublicarEnFanpageAsync(string mensaje)
+    public async Task PublicarEnFanpageAsync(string accessTokenPage, string pageId, string mensaje)
     {
-        await _anuncioRepository.PublicarEnFanpageAsync(mensaje);
+        await _anuncioRepository.PublicarEnFanpageAsync(accessTokenPage, pageId, mensaje);
     }
 
-    public async Task PublicarEnFanpageAsync(string mensaje, string link = null, string photoId = null)
+    public async Task PublicarEnFanpageAsync(string accessTokenPage, string pageId, string mensaje, string link = null, string photoId = null)
     {
-        await _anuncioRepository.PublicarEnFanpageAsync(mensaje, link, photoId);
+        await _anuncioRepository.PublicarEnFanpageAsync(accessTokenPage, pageId, mensaje, link, photoId);
     }
 
     public async Task<string> SubirImagenAFanpageAsync(string accessTokenPage, string imageUrl, string mensaje = null)
     {
         return await _anuncioRepository.SubirImagenAFanpageAsync(accessTokenPage, imageUrl, mensaje);
+    }
+
+    public async Task<string> SubirImagenLocalAFanpageAsync(string accessTokenPage, Stream imageStream, string fileName, string mensaje = null)
+    {
+        return await _anuncioRepository.SubirImagenLocalAFanpageAsync(accessTokenPage, imageStream, fileName, mensaje);
     }
 }

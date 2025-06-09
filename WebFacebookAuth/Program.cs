@@ -1,4 +1,5 @@
 using System.Net.Http;
+using WebFacebookAuth;
 using WebFacebookAuth.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +15,8 @@ builder.Services.AddHttpClient("Api", client =>
 {
     client.BaseAddress = new Uri("https://localhost:7296/");
 });
+
+builder.Services.AddScoped<SessionState>();
 
 var app = builder.Build();
 

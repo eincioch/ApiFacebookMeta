@@ -1,8 +1,10 @@
-﻿using System.Net.Http;
+﻿using Dominio.Contracts;
+using Dominio.Entities;
+using Dominio.Entities.Response;
+using Microsoft.Extensions.Configuration;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Dominio.Contracts;
 
 public class FacebookAuthRepository : IFacebookAuthRepository
 {
@@ -67,6 +69,12 @@ public class FacebookAuthRepository : IFacebookAuthRepository
         using var httpClient = new HttpClient();
         var response = await httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Error Facebook API: {response.StatusCode} - {errorContent}");
+        }
+
 
         var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
@@ -81,4 +89,29 @@ public class FacebookAuthRepository : IFacebookAuthRepository
         }
         throw new Exception("No se encontró el token de la página.");
     }
+
+    public async Task<List<FanPage>> ListaPaginasAsync(string userAccessToken) {
+
+        var url = $"https://graph.facebook.com/v23.0/me/accounts?access_token={userAccessToken}";
+        using var httpClient = new HttpClient();
+        var response = await httpClient.GetAsync(url);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Error Facebook API: {response.StatusCode} - {errorContent}");
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(json);
+        //var pages = doc.RootElement.GetProperty("data").EnumerateArray();
+
+        // Mapear los datos del JSON a la clase FanPage 
+        var fanPageResponse = JsonSerializer.Deserialize<FanPageResponse>(json);
+        return fanPageResponse?.data ?? new List<FanPage>();
+
+    }
+
+
 }

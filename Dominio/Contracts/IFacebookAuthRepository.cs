@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dominio.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,5 +14,7 @@ namespace Dominio.Contracts
         Task<bool> VerificarPermisosAsync(string accessToken);
 
         Task<string> ObtenerTokenPaginaAsync(string userAccessToken, string pageId);
+
+        Task<List<FanPage>> ListaPaginasAsync(string userAccessToken);
     }
 }

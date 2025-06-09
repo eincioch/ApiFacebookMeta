@@ -1,0 +1,181 @@
+﻿@page "/facebook-post"
+@inject HttpClient Http
+@inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedLocalStorage ProtectedLocalStorage
+@inject IConfiguration Configuration
+@inject IJSRuntime JS
+
+@rendermode InteractiveServer
+
+<h4>Publicar en Fanpage Personalizado</h4>
+<EditForm Model="@formModel" OnValidSubmit="PublicarEnFanpagePersonalizadoAsync">
+    <InputText @bind-Value="formModel.AccessTokenPage" placeholder="Access Token User" class="form-control" />
+    <br />
+    <InputText @bind-Value="formModel.PageId" placeholder="PageId" class="form-control" />
+    <br />
+    <InputText @bind-Value="mensajePersonalizado" placeholder="Mensaje" class="form-control" />
+    <br />
+    <InputText @bind-Value="linkPersonalizado" placeholder="Link" class="form-control" />
+    <br />
+    <InputCheckbox @bind-Value="incluirPhotoId" /> Incluir PhotoId
+    <br />
+    @if (incluirPhotoId)
+    {
+        <InputText @bind-Value="photoIdPersonalizado" placeholder="PhotoId" class="form-control" />
+        <br />
+    }
+    <button class="btn btn-success" type="submit">Publicar</button>
+</EditForm>
+@if (!string.IsNullOrEmpty(resultadoPost))
+{
+    <div class="alert alert-info mt-2">@resultadoPost</div>
+}
+
+@code {
+    private FacebookUploadModel formModel = new();
+    private string mensajePersonalizado="";
+    private string linkPersonalizado;
+    private string photoIdPersonalizado;
+    private bool incluirPhotoId = false;
+    private string resultadoPost;
+
+    private string error;
+    private string userAccessToken;
+    private string pageId; // ID de la página de Facebook
+    private string accessTokenPage; // Token de página que obtendrás antes de subir la imagen
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        if (firstRender)
+        {
+            // Método básico para verificar si JS está funcionando
+            await JS.InvokeVoidAsync("console.log", "Prueba básica de JS");
+
+            // // Intenta actualizar un elemento en el DOM
+            // await JS.InvokeVoidAsync("eval",
+            //     "document.getElementById('renderStatus').innerText = 'OnAfterRenderAsync ejecutado correctamente'");
+
+            try
+            {
+                // Forzar la recuperación desde ProtectedLocalStorage
+                var pageIdResult = await ProtectedLocalStorage.GetAsync<string>("fb_page_id");
+                if (pageIdResult.Success && !string.IsNullOrEmpty(pageIdResult.Value))
+                {
+                    formModel.PageId = pageIdResult.Value;
+                    pageId = pageIdResult.Value;
+                    //SessionState.FbPageId = pageIdResult.Value;
+
+                    // Añadir un mensaje en la consola para depuración
+                    await JS.InvokeVoidAsync("console.log", $"fb_page_id recuperado: {pageId}");
+
+                    // Mostrar el alert
+                    await JS.InvokeVoidAsync("alert", $"fb_page_id recuperado: {pageId}");
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("console.log", "No se encontró fb_page_id");
+                }
+
+                var tokenResult = await ProtectedLocalStorage.GetAsync<string>("fb_token");
+                if (tokenResult.Success && !string.IsNullOrEmpty(tokenResult.Value))
+                {
+                    formModel.AccessTokenPage = tokenResult.Value;
+                    userAccessToken = tokenResult.Value;
+                    //SessionState.FbToken = tokenResult.Value;
+                    await JS.InvokeVoidAsync("console.log", "fb_token recuperado");
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("console.log", "No se encontró fb_token");
+                }
+
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("console.error", $"Error en OnAfterRenderAsync: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task PublicarEnFanpagePersonalizadoAsync()
+    {
+        // 1. Obtén el token de página antes de subir la imagen
+        accessTokenPage = await ObtenerTokenPaginaAsync();
+        if (string.IsNullOrEmpty(accessTokenPage))
+        {
+            error = "No se pudo obtener el token de la página. Verifica el token de usuario y el ID de la página.";
+            return;
+        }
+
+
+
+        var apiBaseUrl = Configuration["ApiBaseUrl"] ?? "https://localhost:7296";
+        var url = $"{apiBaseUrl}/api/anuncios/fanpage/post-personalizado";
+
+        var dto = new
+        {
+            accessTokenPage = accessTokenPage,
+            pageId = pageId,
+            mensaje = mensajePersonalizado,
+            link = linkPersonalizado,
+            photoId = incluirPhotoId ? photoIdPersonalizado : ""
+        };
+
+        var response = await Http.PostAsJsonAsync(url, dto);
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+            resultadoPost = json.GetProperty("message").GetString();
+        }
+        else
+        {
+            resultadoPost = "Error al publicar en la fanpage.";
+        }
+    }
+
+    private async Task<string> ObtenerTokenPaginaAsync()
+    {
+        if (string.IsNullOrEmpty(userAccessToken))
+        {
+            error = "No se encontró el token de Facebook. Inicia sesión primero.";
+            return null; // Asegúrate de devolver un valor en esta ruta
+        }
+        if (string.IsNullOrEmpty(pageId))
+        {
+            error = "No se encontró el ID de la página. Asegúrate de haber seleccionado una página.";
+            return null; // Asegúrate de devolver un valor en esta ruta
+        }
+
+        var apiBaseUrl = Configuration["ApiBaseUrl"] ?? "https://localhost:7296";
+        var url = $"{apiBaseUrl}/api/facebookauth/obtener-token-page";
+        var body = new
+        {
+            userAccessToken = userAccessToken,
+            pageId = pageId
+        };
+
+
+        var response = await Http.PostAsJsonAsync(url, body);
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+            var tokenpage = json.GetProperty("access_token_page").GetString();
+            return tokenpage;
+        }
+        else
+        {
+            // Maneja el error (puedes mostrar un mensaje al usuario)
+            return null; // Devuelve un valor en caso de error
+        }
+
+    }
+
+
+    public class FacebookUploadModel
+    {
+        public string PageId { get; set; }
+        public string AccessTokenPage { get; set; }
+        public string Mensaje { get; set; }
+    }
+}

@@ -1,0 +1,216 @@
+﻿@page "/facebook-upload"
+@inject HttpClient Http
+@inject Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage.ProtectedLocalStorage ProtectedLocalStorage
+@inject IConfiguration Configuration
+@inject IJSRuntime JS
+@inject SessionState SessionState
+@inject ILogger<FacebookUpload> Logger
+
+@rendermode InteractiveServer
+
+<h3>Subir imagen local a Fanpage</h3>
+
+<EditForm Model="@formModel" OnValidSubmit="OnSubmit">
+    <InputText @bind-Value="formModel.AccessTokenPage" placeholder="Access Token de Página" class="form-control" />
+    <br />
+    <InputText @bind-Value="formModel.PageId" placeholder="PageId" class="form-control" />
+    <br />
+    <InputText @bind-Value="formModel.Mensaje" placeholder="Mensaje (opcional)" class="form-control" />
+    <br />
+    <InputFile OnChange="OnInputFileChange" />
+    <br />
+    <br />
+    <button class="btn btn-primary" type="submit" disabled="@isUploading">Subir imagen</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(photoId))
+{
+    <div class="alert alert-success mt-3">
+        Imagen subida correctamente.<br />
+        <b>PhotoId:</b> @photoId
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger mt-3">@error</div>
+}
+
+@code {
+    private readonly ILogger<FacebookUpload> _logger;
+    private FacebookUploadModel formModel = new();
+    private IBrowserFile selectedFile;
+    private string photoId;
+    private string error;
+    private bool isUploading = false;
+    private string userAccessToken; // Token de usuario (lo obtienes tras el login)
+    private string pageId; // ID de la página de Facebook
+    private string accessTokenPage; // Token de página que obtendrás antes de subir la imagen
+
+
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logger.LogInformation("OnInitializedAsync ejecutado");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Logger.LogInformation($"OnAfterRender ejecutado. FirstRender: {firstRender}");
+
+        if (firstRender)
+        {
+            // Método básico para verificar si JS está funcionando
+            await JS.InvokeVoidAsync("console.log", "Prueba básica de JS");
+
+            // // Intenta actualizar un elemento en el DOM
+            // await JS.InvokeVoidAsync("eval",
+            //     "document.getElementById('renderStatus').innerText = 'OnAfterRenderAsync ejecutado correctamente'");
+
+            try
+            {
+                // Forzar la recuperación desde ProtectedLocalStorage
+                var pageIdResult = await ProtectedLocalStorage.GetAsync<string>("fb_page_id");
+                if (pageIdResult.Success && !string.IsNullOrEmpty(pageIdResult.Value))
+                {
+                    formModel.PageId = pageIdResult.Value;
+                    pageId = pageIdResult.Value;
+                    SessionState.FbPageId = pageIdResult.Value;
+
+                    // Añadir un mensaje en la consola para depuración
+                    await JS.InvokeVoidAsync("console.log", $"fb_page_id recuperado: {pageId}");
+
+                    // Mostrar el alert
+                    await JS.InvokeVoidAsync("alert", $"fb_page_id recuperado: {pageId}");
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("console.log", "No se encontró fb_page_id");
+                }
+
+                var tokenResult = await ProtectedLocalStorage.GetAsync<string>("fb_token");
+                if (tokenResult.Success && !string.IsNullOrEmpty(tokenResult.Value))
+                {
+                    formModel.AccessTokenPage = tokenResult.Value;
+                    userAccessToken = tokenResult.Value;
+                    SessionState.FbToken = tokenResult.Value;
+                    await JS.InvokeVoidAsync("console.log", "fb_token recuperado");
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("console.log", "No se encontró fb_token");
+                }
+
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("console.error", $"Error en OnAfterRenderAsync: {ex.Message}");
+            }
+        }
+    }
+
+
+    private async Task OnSubmit()
+    {
+        // 1. Obtén el token de página antes de subir la imagen
+        accessTokenPage = await ObtenerTokenPaginaAsync();
+
+        if (string.IsNullOrEmpty(accessTokenPage))
+        {
+            error = "No se pudo obtener el token de la página. Verifica el token de usuario y el ID de la página.";
+            return;
+        }
+
+        // 2. Ahora puedes llamar al endpoint de subida de imagen usando accessTokenPage
+        error = null;
+        photoId = null;
+        if (selectedFile == null)
+        {
+            error = "Selecciona un archivo.";
+            return;
+        }
+
+        isUploading = true;
+        try
+        {
+            //2. Preparamos el contenido del formulario para la subida de imagen
+            var content = new MultipartFormDataContent();
+            var stream = selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10MB máx
+            content.Add(new StreamContent(stream), "archivo", selectedFile.Name);
+            content.Add(new StringContent(formModel.Mensaje ?? ""), "mensaje");
+
+            var apiBaseUrl = Configuration["ApiBaseUrl"] ?? "https://localhost:7296";
+            //var url = $"/api/anuncios/fanpage/upload-local-image?accessTokenPage={formModel.AccessTokenPage}";
+            var url = $"{apiBaseUrl}/api/anuncios/fanpage/upload-local-image?accessTokenPage={accessTokenPage}";
+            var response = await Http.PostAsync(url, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                photoId = json.GetProperty("photoId").GetString();
+            }
+            else
+            {
+                error = $"Error: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            isUploading = false;
+        }
+    }
+
+
+    private async Task<string> ObtenerTokenPaginaAsync()  
+    {  
+        if (string.IsNullOrEmpty(userAccessToken))  
+        {  
+            error = "No se encontró el token de Facebook. Inicia sesión primero.";  
+            return null; // Asegúrate de devolver un valor en esta ruta  
+        }  
+        if (string.IsNullOrEmpty(pageId))  
+        {  
+            error = "No se encontró el ID de la página. Asegúrate de haber seleccionado una página.";  
+            return null; // Asegúrate de devolver un valor en esta ruta  
+        }  
+
+        var apiBaseUrl = Configuration["ApiBaseUrl"] ?? "https://localhost:7296";  
+        var url = $"{apiBaseUrl}/api/facebookauth/obtener-token-page";
+        var body = new
+        {
+            userAccessToken = userAccessToken,
+            pageId = pageId
+        };
+
+
+        var response = await Http.PostAsJsonAsync(url, body);
+        if (response.IsSuccessStatusCode)  
+        {  
+            var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+            var tokenpage = json.GetProperty("access_token_page").GetString();
+            return tokenpage;
+        }  
+        else  
+        {  
+            // Maneja el error (puedes mostrar un mensaje al usuario)  
+            return null; // Devuelve un valor en caso de error  
+        }  
+        
+    }
+
+    public class FacebookUploadModel
+    {
+        public string PageId { get; set; }
+        public string AccessTokenPage { get; set; }
+        public string Mensaje { get; set; }
+    }
+}

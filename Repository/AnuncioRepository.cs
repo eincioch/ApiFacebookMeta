@@ -42,11 +42,11 @@ public class AnuncioRepository : IAnuncioRepository
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task PublicarEnFanpageAsync(string mensaje)
+    public async Task PublicarEnFanpageAsync(string accessTokenPage, string pageId, string mensaje)
     {
         //ver Fanpage https://graph.facebook.com/v23.0/me/accounts?access_token=EAADiSzrEAlUBO90pfAZAidA3xQbOK2dtCSZBb8Bobr8ZAloN9HpTrMX6XdPMBJh608PfQRZBmwd3Lxssm2gkQ7as2RAqH2c8aXky2edWGZCkK3eulUv7hZCzuAvYSZAjFgVfu4K8kFl8bRFCBC38xeuO6NjvQy6ZCFUQvojyZBirwZCPGTKkgG7EBbQPjT8cKh3REZCZAQjSCzqWrvN5iGzZCXIgCHgVgj6XcSjqHvWLh
 
-        var url = $"https://graph.facebook.com/v23.0/{_pageId}/feed?access_token={_accessTokenPage}";
+        var url = $"https://graph.facebook.com/v23.0/{pageId}/feed?access_token={accessTokenPage}";
         var body = new
         {
             message = mensaje
@@ -60,9 +60,9 @@ public class AnuncioRepository : IAnuncioRepository
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<string> PublicarEnFanpageAsync(string mensaje, string link = null, string photoId = null)
+    public async Task<string> PublicarEnFanpageAsync(string accessTokenPage, string pageId, string mensaje, string link = null, string photoId = null)
     {
-        var url = $"https://graph.facebook.com/v23.0/{_pageId}/feed?access_token={_accessTokenPage}";
+        var url = $"https://graph.facebook.com/v23.0/{pageId}/feed?access_token={accessTokenPage}";
         var body = new Dictionary<string, object>
         {
             { "message", mensaje }
@@ -111,6 +111,29 @@ public class AnuncioRepository : IAnuncioRepository
 
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
         // El ID de la foto subida está en el campo "id"
+        return json.GetProperty("id").GetString();
+    }
+
+    public async Task<string> SubirImagenLocalAFanpageAsync(string accessTokenPage, Stream imageStream, string fileName, string mensaje = null)
+    {
+        var url = $"https://graph.facebook.com/v23.0/{_pageId}/photos?access_token={accessTokenPage}";
+
+        using var form = new MultipartFormDataContent();
+        // Adjunta el archivo como 'source'
+        form.Add(new StreamContent(imageStream), "source", fileName);
+        form.Add(new StringContent("false"), "published"); // No publicar directamente, solo subir
+
+        if (!string.IsNullOrEmpty(mensaje))
+            form.Add(new StringContent(mensaje), "message");
+
+        var response = await _httpClient.PostAsync(url, form);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Error Facebook API: {response.StatusCode} - {errorContent}");
+        }
+
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
         return json.GetProperty("id").GetString();
     }
 
