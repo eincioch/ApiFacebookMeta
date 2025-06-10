@@ -153,6 +153,7 @@
             {
                 var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
                 photoId = json.GetProperty("photoId").GetString();
+                await ProtectedLocalStorage.SetAsync("fb_photo_id", photoId);
             }
             else
             {

@@ -33,7 +33,7 @@
 @code {
     private FacebookUploadModel formModel = new();
     private string mensajePersonalizado="";
-    private string linkPersonalizado;
+    private string linkPersonalizado="";
     private string photoIdPersonalizado;
     private bool incluirPhotoId = false;
     private string resultadoPost;
@@ -88,6 +88,21 @@
                 {
                     await JS.InvokeVoidAsync("console.log", "No se encontró fb_token");
                 }
+
+                // photoId 
+                var photoIdResult = await ProtectedLocalStorage.GetAsync<string>("fb_photo_id");
+                if (photoIdResult.Success && !string.IsNullOrEmpty(photoIdResult.Value))
+                {
+                    photoIdPersonalizado = photoIdResult.Value;
+                    incluirPhotoId = true; // Asumimos que si hay un photoId, se quiere incluir
+                    await JS.InvokeVoidAsync("console.log", $"fb_photo_id recuperado: {photoIdPersonalizado}");
+                }
+                else
+                {
+                    incluirPhotoId = false; // Si no hay photoId, no se incluye
+                    await JS.InvokeVoidAsync("console.log", "No se encontró fb_photo_id");
+                }
+
 
                 StateHasChanged();
             }
