@@ -94,6 +94,13 @@ Para usar esta aplicación, necesitarás configurar una aplicación en Facebook 
 
 ## 📚 Documentación Detallada
 
+### 📊 Informes Ejecutivos
+- [📋 Resumen Ejecutivo](RESUMEN_EJECUTIVO.md) - Vista rápida para directivos
+- [📊 Informe Ejecutivo Completo](INFORME_EJECUTIVO.md) - Análisis detallado del proyecto
+- [🎯 Presentación Ejecutiva](PRESENTACION_EJECUTIVA.md) - Para stakeholders
+- [🔧 Detalles Técnicos](DETALLES_TECNICOS.md) - Implementación técnica
+
+### 🛠️ Documentación Técnica
 - [📖 Guía de Instalación Completa](docs/INSTALLATION.md)
 - [🔧 Documentación de API](docs/API.md)
 - [🏛️ Arquitectura del Proyecto](docs/ARCHITECTURE.md)

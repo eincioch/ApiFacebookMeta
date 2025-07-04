@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Temporary files for document generation
+INFORME_COMPLETO_WORD.md
